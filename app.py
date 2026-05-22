@@ -20,12 +20,23 @@ def embed_query(text):
 
 def search_pinecone(query, top_k=5):
     vector = embed_query(query)
-    results = index.query(
-        vector=vector,
-        top_k=top_k,
-        include_metadata=True
-    )
-    return results['matches']
+    namespaces = [
+        "b92b1c18-bacf-4e66-b68e-cd9a2773a43f",
+        "negatives_1ab483a7-b766-483e-945f-98bf883cb889",
+        "negatives_c0118566-ee85-468a-a6b0-009fd5f5728c",
+        "anchors"
+    ]
+    all_matches = []
+    for ns in namespaces:
+        results = index.query(
+            vector=vector,
+            top_k=top_k,
+            include_metadata=True,
+            namespace=ns
+        )
+        all_matches.extend(results['matches'])
+    all_matches.sort(key=lambda x: x['score'], reverse=True)
+    return all_matches[:top_k]
 
 def build_context(matches):
     context_parts = []
